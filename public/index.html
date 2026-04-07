@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d0d0d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>PizzaNav — Driver Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --red: #e8001d;
+  --red-glow: rgba(232,0,29,0.15);
+  --orange: #ff6b00;
+  --green: #00e676;
+  --green-dim: rgba(0,230,118,0.1);
+  --bg: #0d0d0d;
+  --surface: #161616;
+  --surface2: #1f1f1f;
+  --border: #282828;
+  --text: #f2f2f2;
+  --muted: #555;
+  --muted2: #888;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-body: 'Syne', sans-serif;
+}
+
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); overflow-x: hidden; }
+
+/* GRAIN */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9999;
+}
+
+/* ── PAGES ── */
+.page { display: none; min-height: 100dvh; flex-direction: column; }
+.page.active { display: flex; }
+
+/* ── LOGIN PAGE ── */
+#loginPage {
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-bg-circle {
+  position: absolute;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,0,29,0.06) 0%, transparent 70%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.login-logo .icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 8px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.login-logo h1 {
+  font-family: var(--font-display);
+  font-size: 52px;
+  letter-spacing: 4px;
+  line-height: 1;
+}
+
+.login-logo h1 span { color: var(--red); }
+
+.login-logo p {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+
+.pin-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted2);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* PIN PAD */
+.pin-display {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.pin-dot {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  transition: all 0.15s ease;
+}
+
+.pin-dot.filled {
+  background: var(--red);
+  border-color: var(--red);
+  box-shadow: 0 0 12px rgba(232,0,29,0.4);
+}
+
+.pin-dot.error {
+  background: transparent;
+  border-color: var(--red);
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.numpad-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.numpad-btn:active {
+  background: var(--surface2);
+  border-color: var(--red);
+  transform: scale(0.94);
+}
+
+.numpad-btn.del {
+  font-size: 20px;
+  color: var(--muted2);
+}
+
+.numpad-btn.empty { visibility: hidden; }
+
+.login-error {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--red);
+  text-align: center;
+  margin-top: 16px;
+  min-height: 16px;
+  letter-spacing: 1px;
+}
+
+/* ── HEADER ── */
+.app-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.app-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 40px; height: 2px;
+  background: var(--red);
+}
+
+.header-logo {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 2px;
+}
+
+.header-logo span { color: var(--red); }
+
+.header-driver {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.driver-avatar {
+  width: 32px; height: 32px;
+  background: var(--red);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 14px;
+}
+
+.driver-name {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted2);
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 1px;
+}
+
+.logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.tab {
+  flex: 1;
+  padding: 14px 8px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.tab .tab-icon { font-size: 16px; }
+.tab.active { color: var(--text); }
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 20%; right: 20%;
+  height: 2px;
+  background: var(--red);
+  border-radius: 1px;
+}
+
+.tab-badge {
+  position: absolute;
+  top: 8px; right: calc(50% - 18px);
+  background: var(--red);
+  color: white;
+  font-size: 9px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  display: none;
+}
+
+/* ── MAIN CONTENT ── */
+.tab-content { display: none; flex: 1; overflow-y: auto; }
+.tab-content.active { display: block; }
+
+/* ── ORDERS TAB ── */
+.orders-section { padding: 20px; }
+
+.section-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ── ORDER CARD ── */
+.order-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 12px;
+  transition: all 0.2s;
+  animation: fadeUp 0.3s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.order-card.in-delivery {
+  border-color: rgba(232,0,29,0.3);
+  background: linear-gradient(135deg, var(--surface), rgba(232,0,29,0.04));
+}
+
+.order-card.pending-assign {
+  border-color: rgba(255,107,0,0.3);
+}
+
+.order-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.order-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted2);
+  letter-spacing: 1px;
+}
+
+.order-status {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.status-pending { background: rgba(255,107,0,0.15); color: var(--orange); border: 1px solid rgba(255,107,0,0.2); }
+.status-in_delivery { background: rgba(232,0,29,0.15); color: var(--red); border: 1px solid rgba(232,0,29,0.2); }
+.status-delivered { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
+
+.order-customer {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.order-address {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted2);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.order-items {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 14px;
+  padding: 8px 10px;
+  background: var(--bg);
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+.order-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-primary { background: var(--red); color: white; }
+.btn-primary:active { background: #c00018; transform: scale(0.97); }
+
+.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:active { background: var(--border); transform: scale(0.97); }
+
+.btn-success { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,230,118,0.25); }
+.btn-success:active { transform: scale(0.97); }
+
+.btn-map { background: rgba(66,133,244,0.12); color: #4285f4; border: 1px solid rgba(66,133,244,0.2); }
+.btn-map:active { transform: scale(0.97); }
+
+.btn-call { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
+
+/* Timer display */
+.delivery-timer {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted2);
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+}
+
+.timer-value { color: var(--orange); font-weight: 500; }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--muted);
+}
+
+.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+.empty-text { font-family: var(--font-mono); font-size: 12px; letter-spacing: 1px; }
+
+/* ── STATS TAB ── */
+.stats-section { padding: 20px; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 16px;
+  animation: fadeUp 0.4s ease;
+}
+
+.stat-card.full { grid-column: 1 / -1; }
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 42px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-value.red { color: var(--red); }
+.stat-value.green { color: var(--green); }
+.stat-value.orange { color: var(--orange); }
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.stat-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted2);
+  margin-top: 6px;
+}
+
+/* Delivery history */
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  animation: fadeUp 0.3s ease;
+}
+
+.history-item:last-child { border-bottom: none; }
+
+.history-left { flex: 1; }
+.history-addr {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted2);
+  margin-top: 2px;
+}
+
+.history-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.history-time {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--orange);
+  text-align: right;
+}
+
+.history-time-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--muted);
+  text-align: right;
+}
+
+/* ── NOTIFICATION TOAST ── */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-80px);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  z-index: 9998;
+  transition: transform 0.3s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: rgba(0,230,118,0.3); }
+.toast.new-order { border-color: rgba(232,0,29,0.3); }
+
+/* ── PULSE DOT ── */
+.live-dot {
+  width: 8px; height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+  display: inline-block;
+  animation: livePulse 2s ease infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,230,118,0.4); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(0,230,118,0); }
+}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN PAGE ── -->
+<div class="page active" id="loginPage">
+  <div class="login-bg-circle"></div>
+  <div class="login-logo">
+    <span class="icon">🍕</span>
+    <h1>PIZZA<span>NAV</span></h1>
+    <p>Driver Portal · Internal</p>
+  </div>
+  <div class="pin-label">Enter your PIN</div>
+  <div class="pin-display">
+    <div class="pin-dot" id="dot0"></div>
+    <div class="pin-dot" id="dot1"></div>
+    <div class="pin-dot" id="dot2"></div>
+    <div class="pin-dot" id="dot3"></div>
+  </div>
+  <div class="numpad">
+    <button class="numpad-btn" onclick="pinInput('1')">1</button>
+    <button class="numpad-btn" onclick="pinInput('2')">2</button>
+    <button class="numpad-btn" onclick="pinInput('3')">3</button>
+    <button class="numpad-btn" onclick="pinInput('4')">4</button>
+    <button class="numpad-btn" onclick="pinInput('5')">5</button>
+    <button class="numpad-btn" onclick="pinInput('6')">6</button>
+    <button class="numpad-btn" onclick="pinInput('7')">7</button>
+    <button class="numpad-btn" onclick="pinInput('8')">8</button>
+    <button class="numpad-btn" onclick="pinInput('9')">9</button>
+    <button class="numpad-btn empty"></button>
+    <button class="numpad-btn" onclick="pinInput('0')">0</button>
+    <button class="numpad-btn del" onclick="pinDelete()">⌫</button>
+  </div>
+  <div class="login-error" id="loginError"></div>
+</div>
+
+<!-- ── MAIN APP PAGE ── -->
+<div class="page" id="appPage">
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-logo">PIZZA<span>NAV</span></div>
+    <div class="header-driver">
+      <span class="live-dot"></span>
+      <div class="driver-avatar" id="driverAvatar">?</div>
+      <div class="driver-name" id="driverName">Driver</div>
+      <button class="logout-btn" onclick="logout()">OUT</button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('orders')" id="tabOrders">
+      <span class="tab-icon">📦</span>
+      Orders
+      <span class="tab-badge" id="pendingBadge">0</span>
+    </button>
+    <button class="tab" onclick="switchTab('active')" id="tabActive">
+      <span class="tab-icon">🏍️</span>
+      Active
+    </button>
+    <button class="tab" onclick="switchTab('stats')" id="tabStats">
+      <span class="tab-icon">📊</span>
+      Stats
+    </button>
+  </div>
+
+  <!-- Tab: Pending Orders -->
+  <div class="tab-content active" id="contentOrders">
+    <div class="orders-section">
+      <div class="section-title">
+        <span>Pending Orders</span>
+        <span style="color:var(--muted2)" id="pendingCount">0 waiting</span>
+      </div>
+      <div id="pendingOrdersList">
+        <div class="empty-state">
+          <div class="empty-icon">⏳</div>
+          <div class="empty-text">No pending orders</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Active Delivery -->
+  <div class="tab-content" id="contentActive">
+    <div class="orders-section">
+      <div class="section-title">My Active Delivery</div>
+      <div id="activeOrderContainer">
+        <div class="empty-state">
+          <div class="empty-icon">🍕</div>
+          <div class="empty-text">No active delivery</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Stats -->
+  <div class="tab-content" id="contentStats">
+    <div class="stats-section">
+      <div class="section-title" style="margin-bottom:16px">
+        <span>Your Performance</span>
+        <span style="color:var(--muted2)" id="statsDate"></span>
+      </div>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-value red" id="statToday">—</div>
+          <div class="stat-label">Today</div>
+          <div class="stat-sub">Deliveries</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value orange" id="statAvg">—</div>
+          <div class="stat-label">Avg Time</div>
+          <div class="stat-sub">Minutes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value green" id="statBest">—</div>
+          <div class="stat-label">Best Time</div>
+          <div class="stat-sub">Minutes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statWeek" style="color:var(--text)">—</div>
+          <div class="stat-label">This Week</div>
+          <div class="stat-sub">Deliveries</div>
+        </div>
+        <div class="stat-card full">
+          <div class="stat-value" id="statTotal" style="font-size:36px;color:var(--text)">—</div>
+          <div class="stat-label">All Time Deliveries</div>
+        </div>
+      </div>
+
+      <div class="section-title">Today's History</div>
+      <div id="historyList">
+        <div class="empty-state" style="padding:32px 0">
+          <div class="empty-text">No deliveries today yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span id="toastIcon">✅</span>
+  <span id="toastText">Done</span>
+</div>
+
+<script>
+const API = ''; // same origin
+let currentDriver = null;
+let pin = '';
+let timers = {};
+let eventSource = null;
+
+// ── PIN LOGIN ──────────────────────────────────────────────
+function pinInput(digit) {
+  if (pin.length >= 4) return;
+  pin += digit;
+  updatePinDisplay();
+  if (pin.length === 4) {
+    setTimeout(tryLogin, 100);
+  }
+}
+
+function pinDelete() {
+  pin = pin.slice(0, -1);
+  updatePinDisplay();
+  document.getElementById('loginError').textContent = '';
+}
+
+function updatePinDisplay() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById(`dot${i}`);
+    dot.classList.toggle('filled', i < pin.length);
+    dot.classList.remove('error');
+  }
+}
+
+async function tryLogin() {
+  try {
+    const res = await fetch(`${API}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin })
+    });
+    const data = await res.json();
+    if (data.success) {
+      currentDriver = data.driver;
+      enterApp();
+    } else {
+      showPinError();
+    }
+  } catch {
+    showPinError('Server not reachable');
+  }
+}
+
+function showPinError(msg = 'Wrong PIN') {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById(`dot${i}`);
+    dot.classList.remove('filled');
+    dot.classList.add('error');
+  }
+  document.getElementById('loginError').textContent = msg;
+  setTimeout(() => {
+    pin = '';
+    updatePinDisplay();
+  }, 800);
+}
+
+function enterApp() {
+  document.getElementById('loginPage').classList.remove('active');
+  document.getElementById('appPage').classList.add('active');
+  document.getElementById('driverName').textContent = currentDriver.name;
+  document.getElementById('driverAvatar').textContent = currentDriver.name[0].toUpperCase();
+  document.getElementById('statsDate').textContent = new Date().toLocaleDateString('de-DE');
+
+  loadPendingOrders();
+  loadMyActiveOrder();
+  loadStats();
+  connectSSE();
+}
+
+function logout() {
+  currentDriver = null;
+  pin = '';
+  updatePinDisplay();
+  if (eventSource) eventSource.close();
+  document.getElementById('appPage').classList.remove('active');
+  document.getElementById('loginPage').classList.add('active');
+  document.getElementById('loginError').textContent = '';
+}
+
+// ── TABS ───────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.add('active');
+  document.getElementById(`content${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.add('active');
+  if (tab === 'stats') loadStats();
+}
+
+// ── PENDING ORDERS ─────────────────────────────────────────
+async function loadPendingOrders() {
+  try {
+    const res = await fetch(`${API}/api/orders/pending`);
+    const orders = await res.json();
+    renderPendingOrders(orders);
+  } catch { }
+}
+
+function renderPendingOrders(orders) {
+  const list = document.getElementById('pendingOrdersList');
+  const count = document.getElementById('pendingCount');
+  const badge = document.getElementById('pendingBadge');
+
+  count.textContent = `${orders.length} waiting`;
+  if (orders.length > 0) {
+    badge.style.display = 'flex';
+    badge.textContent = orders.length;
+  } else {
+    badge.style.display = 'none';
+  }
+
+  if (orders.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">No pending orders</div></div>`;
+    return;
+  }
+
+  list.innerHTML = orders.map(o => `
+    <div class="order-card pending-assign" id="order-${o.id}">
+      <div class="order-top">
+        <div class="order-num">${o.order_number}</div>
+        <div class="order-status status-pending">WAITING</div>
+      </div>
+      <div class="order-customer">${o.customer_name}</div>
+      <div class="order-address">📍 ${o.address}</div>
+      ${o.items ? `<div class="order-items">🍕 ${o.items}</div>` : ''}
+      <div class="order-actions">
+        <button class="btn btn-primary" onclick="checkoutOrder(${o.id})">
+          ✅ Take This Order
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── CHECKOUT ORDER ─────────────────────────────────────────
+async function checkoutOrder(orderId) {
+  try {
+    const res = await fetch(`${API}/api/orders/${orderId}/checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ driverId: currentDriver.id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('🏍️ Order assigned! Let\'s go!', 'success');
+      loadPendingOrders();
+      loadMyActiveOrder();
+      switchTab('active');
+    }
+  } catch {
+    showToast('❌ Error assigning order', 'error');
+  }
+}
+
+// ── ACTIVE ORDER ───────────────────────────────────────────
+async function loadMyActiveOrder() {
+  try {
+    const res = await fetch(`${API}/api/orders/driver/${currentDriver.id}`);
+    const orders = await res.json();
+    renderActiveOrder(orders.find(o => o.status === 'in_delivery'));
+  } catch { }
+}
+
+function renderActiveOrder(order) {
+  const container = document.getElementById('activeOrderContainer');
+  if (!order) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🍕</div><div class="empty-text">No active delivery</div></div>`;
+    return;
+  }
+
+  const checkedOut = order.checked_out_at ? new Date(order.checked_out_at) : null;
+  const checkoutStr = checkedOut ? checkedOut.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '—';
+  const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(order.address)}&travelmode=bicycling`;
+  const phoneUrl = order.phone ? `tel:${order.phone.replace(/\s/g, '')}` : null;
+
+  container.innerHTML = `
+    <div class="order-card in-delivery">
+      <div class="order-top">
+        <div class="order-num">${order.order_number}</div>
+        <div class="order-status status-in_delivery">🔴 DELIVERING</div>
+      </div>
+      <div class="order-customer">${order.customer_name}</div>
+      <div class="order-address">📍 ${order.address}</div>
+      ${order.items ? `<div class="order-items">🍕 ${order.items}</div>` : ''}
+      <div class="order-actions" style="flex-wrap:wrap;gap:8px">
+        <a href="${mapsUrl}" target="_blank" style="flex:1;text-decoration:none">
+          <button class="btn btn-map" style="width:100%">🗺️ Open Maps</button>
+        </a>
+        ${phoneUrl ? `<a href="${phoneUrl}" style="flex:1;text-decoration:none"><button class="btn btn-call" style="width:100%">📞 Call Customer</button></a>` : ''}
+      </div>
+      <div class="delivery-timer">
+        <span>Checked out: <span class="timer-value">${checkoutStr}</span></span>
+        <span>Elapsed: <span class="timer-value" id="elapsedTimer">—</span></span>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn btn-success" style="width:100%;padding:16px;font-size:13px" onclick="markDelivered(${order.id})">
+          ✅ MARK AS DELIVERED
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Start elapsed timer
+  if (checkedOut) startElapsedTimer(checkedOut);
+}
+
+function startElapsedTimer(from) {
+  clearInterval(timers.elapsed);
+  timers.elapsed = setInterval(() => {
+    const el = document.getElementById('elapsedTimer');
+    if (!el) { clearInterval(timers.elapsed); return; }
+    const mins = Math.floor((Date.now() - from.getTime()) / 60000);
+    const secs = Math.floor(((Date.now() - from.getTime()) % 60000) / 1000);
+    el.textContent = `${mins}m ${secs}s`;
+    el.style.color = mins > 20 ? 'var(--red)' : mins > 15 ? 'var(--orange)' : 'var(--green)';
+  }, 1000);
+}
+
+// ── MARK DELIVERED ─────────────────────────────────────────
+async function markDelivered(orderId) {
+  try {
+    const res = await fetch(`${API}/api/orders/${orderId}/delivered`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ driverId: currentDriver.id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      clearInterval(timers.elapsed);
+      showToast('🎉 Delivered! Great job!', 'success');
+      loadMyActiveOrder();
+      loadStats();
+      switchTab('stats');
+    }
+  } catch {
+    showToast('❌ Error updating order', 'error');
+  }
+}
+
+// ── STATS ──────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res = await fetch(`${API}/api/stats/${currentDriver.id}`);
+    const data = await res.json();
+
+    document.getElementById('statToday').textContent = data.today.count;
+    document.getElementById('statAvg').textContent = data.all_time.avg_time_minutes ?? '—';
+    document.getElementById('statBest').textContent = data.all_time.best_time_minutes ?? '—';
+    document.getElementById('statWeek').textContent = data.week.count;
+    document.getElementById('statTotal').textContent = data.all_time.count;
+
+    // History
+    const historyList = document.getElementById('historyList');
+    const deliveries = data.today.deliveries;
+    if (deliveries.length === 0) {
+      historyList.innerHTML = `<div class="empty-state" style="padding:32px 0"><div class="empty-text">No deliveries today yet</div></div>`;
+      return;
+    }
+
+    historyList.innerHTML = deliveries.reverse().map(o => {
+      const mins = o.checked_out_at && o.delivered_at
+        ? Math.round((new Date(o.delivered_at) - new Date(o.checked_out_at)) / 60000)
+        : null;
+      return `
+        <div class="history-item">
+          <div class="history-left">
+            <div class="history-name">${o.customer_name}</div>
+            <div class="history-addr">${o.address}</div>
+          </div>
+          <div>
+            <div class="history-time">${mins ?? '—'} min</div>
+            <div class="history-time-label">delivery time</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch { }
+}
+
+// ── SSE (Real-time) ────────────────────────────────────────
+function connectSSE() {
+  if (eventSource) eventSource.close();
+  eventSource = new EventSource(`${API}/api/events`);
+
+  eventSource.addEventListener('new_order', (e) => {
+    const order = JSON.parse(e.data);
+    showToast(`📦 New order: ${order.customer_name}`, 'new-order');
+    loadPendingOrders();
+  });
+
+  eventSource.addEventListener('order_assigned', (e) => {
+    loadPendingOrders();
+  });
+
+  eventSource.addEventListener('order_delivered', (e) => {
+    loadPendingOrders();
+  });
+
+  eventSource.onerror = () => {
+    setTimeout(connectSSE, 3000);
+  };
+}
+
+// ── TOAST ──────────────────────────────────────────────────
+let toastTimer;
+function showToast(text, type = 'success') {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastText').textContent = text;
+  toast.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

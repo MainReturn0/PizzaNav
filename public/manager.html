@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d0d0d">
+<title>PizzaNav — Manager Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --red: #e8001d; --orange: #ff6b00; --green: #00e676;
+  --bg: #0d0d0d; --surface: #161616; --surface2: #1f1f1f;
+  --border: #282828; --text: #f2f2f2; --muted: #555; --muted2: #888;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-body: 'Syne', sans-serif;
+}
+html, body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100%; }
+
+header {
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo { font-family: var(--font-display); font-size: 28px; letter-spacing: 3px; }
+.logo span { color: var(--red); }
+.logo sub { font-size: 12px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 1px; margin-left: 8px; }
+
+.live-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; display: inline-block; animation: pulse 2s infinite; margin-right: 6px; }
+@keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,230,118,0.4)} 50%{opacity:.7;box-shadow:0 0 0 6px rgba(0,230,118,0)} }
+
+main { max-width: 1200px; margin: 0 auto; padding: 32px; }
+
+.top-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  animation: fadeUp 0.4s ease;
+}
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+.kpi-value { font-family: var(--font-display); font-size: 48px; line-height: 1; margin-bottom: 4px; }
+.kpi-label { font-family: var(--font-mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+
+.section-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+/* Simulate button */
+.btn-simulate {
+  background: var(--red);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.btn-simulate:hover { background: #c00018; }
+.btn-simulate:active { transform: scale(0.97); }
+.btn-simulate:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
+
+/* Driver rows */
+.driver-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  animation: fadeUp 0.3s ease;
+}
+.driver-row:last-child { border-bottom: none; }
+
+.driver-avatar {
+  width: 40px; height: 40px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.driver-avatar.active { border-color: rgba(232,0,29,0.4); background: rgba(232,0,29,0.08); }
+
+.driver-info { flex: 1; }
+.driver-name { font-weight: 600; font-size: 15px; }
+.driver-status { font-family: var(--font-mono); font-size: 10px; color: var(--muted2); margin-top: 2px; }
+
+.driver-count { text-align: right; }
+.driver-count-num { font-family: var(--font-display); font-size: 28px; line-height: 1; }
+.driver-count-label { font-family: var(--font-mono); font-size: 9px; color: var(--muted); }
+
+/* Order queue */
+.order-row {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  animation: fadeUp 0.3s ease;
+}
+.order-row:last-child { border-bottom: none; }
+
+.order-row-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.order-id { font-family: var(--font-mono); font-size: 11px; color: var(--muted2); }
+.order-name { font-weight: 600; }
+.order-addr { font-family: var(--font-mono); font-size: 11px; color: var(--muted2); margin-top: 2px; }
+
+.badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.badge-pending { background: rgba(255,107,0,0.15); color: var(--orange); border: 1px solid rgba(255,107,0,0.2); }
+.badge-active { background: rgba(232,0,29,0.15); color: var(--red); border: 1px solid rgba(232,0,29,0.2); }
+
+/* Toast */
+.toast {
+  position: fixed; top: 20px; right: 20px;
+  background: var(--surface2);
+  border: 1px solid rgba(0,230,118,0.3);
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  z-index: 999;
+  transform: translateX(200px);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+.toast.show { transform: translateX(0); opacity: 1; }
+
+@media (max-width: 768px) {
+  .top-row { grid-template-columns: 1fr 1fr; }
+  .two-col { grid-template-columns: 1fr; }
+  main { padding: 20px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">PIZZA<span>NAV</span> <sub>Manager</sub></div>
+  <div style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;color:var(--muted2)">
+    <span class="live-dot"></span> Live Dashboard
+  </div>
+</header>
+
+<main>
+  <!-- KPI Row -->
+  <div class="top-row">
+    <div class="kpi-card">
+      <div class="kpi-value" id="kpiPending" style="color:var(--orange)">—</div>
+      <div class="kpi-label">Pending Orders</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value" id="kpiActive" style="color:var(--red)">—</div>
+      <div class="kpi-label">Active Drivers</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value" id="kpiToday" style="color:var(--green)">—</div>
+      <div class="kpi-label">Delivered Today</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value" id="kpiDrivers" style="color:var(--text)">—</div>
+      <div class="kpi-label">Total Drivers</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <!-- Left: Simulate + Order Queue -->
+    <div>
+      <div class="section-title">Order Queue</div>
+      <button class="btn-simulate" id="simulateBtn" onclick="simulateOrder()">
+        🧪 Simulate Incoming Order
+      </button>
+      <div class="panel">
+        <div id="orderQueue">
+          <div style="text-align:center;padding:32px;font-family:var(--font-mono);font-size:12px;color:var(--muted)">
+            No pending orders
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Driver Status -->
+    <div>
+      <div class="section-title">Driver Status</div>
+      <div class="panel">
+        <div id="driverList">
+          <div style="text-align:center;padding:32px;font-family:var(--font-mono);font-size:12px;color:var(--muted)">
+            Loading...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let eventSource;
+
+async function loadOverview() {
+  try {
+    const res = await fetch('/api/manager/overview');
+    const data = await res.json();
+
+    document.getElementById('kpiPending').textContent = data.pending_orders;
+    document.getElementById('kpiDrivers').textContent = data.drivers.length;
+
+    const activeDrivers = data.drivers.filter(d => d.current_order);
+    document.getElementById('kpiActive').textContent = activeDrivers.length;
+
+    const totalToday = data.drivers.reduce((a, d) => a + d.today_deliveries, 0);
+    document.getElementById('kpiToday').textContent = totalToday;
+
+    // Driver list
+    document.getElementById('driverList').innerHTML = data.drivers.map(d => `
+      <div class="driver-row">
+        <div class="driver-avatar ${d.current_order ? 'active' : ''}">${d.name[0]}</div>
+        <div class="driver-info">
+          <div class="driver-name">${d.name}</div>
+          <div class="driver-status">${d.current_order ? `🔴 Delivering: ${d.current_order.address.split(',')[0]}` : '⚪ Available'}</div>
+        </div>
+        <div class="driver-count">
+          <div class="driver-count-num">${d.today_deliveries}</div>
+          <div class="driver-count-label">today</div>
+        </div>
+      </div>
+    `).join('');
+
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+async function loadPendingOrders() {
+  try {
+    const res = await fetch('/api/orders/pending');
+    const orders = await res.json();
+
+    if (orders.length === 0) {
+      document.getElementById('orderQueue').innerHTML = `<div style="text-align:center;padding:32px;font-family:var(--font-mono);font-size:12px;color:var(--muted)">No pending orders</div>`;
+      return;
+    }
+
+    document.getElementById('orderQueue').innerHTML = orders.map(o => `
+      <div class="order-row">
+        <div class="order-row-top">
+          <span class="order-id">${o.order_number}</span>
+          <span class="badge badge-pending">WAITING</span>
+        </div>
+        <div class="order-name">${o.customer_name}</div>
+        <div class="order-addr">📍 ${o.address}</div>
+      </div>
+    `).join('');
+  } catch {}
+}
+
+async function simulateOrder() {
+  const btn = document.getElementById('simulateBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Sending...';
+  try {
+    await fetch('/api/simulate/order', { method: 'POST' });
+    showToast('📦 New order injected!');
+  } catch {
+    showToast('❌ Server not reachable');
+  }
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.innerHTML = '🧪 Simulate Incoming Order';
+  }, 1000);
+}
+
+function connectSSE() {
+  eventSource = new EventSource('/api/events');
+  eventSource.addEventListener('new_order', () => { loadOverview(); loadPendingOrders(); });
+  eventSource.addEventListener('order_assigned', () => { loadOverview(); loadPendingOrders(); });
+  eventSource.addEventListener('order_delivered', () => { loadOverview(); });
+  eventSource.onerror = () => setTimeout(connectSSE, 3000);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+loadOverview();
+loadPendingOrders();
+connectSSE();
+setInterval(() => { loadOverview(); loadPendingOrders(); }, 15000);
+</script>
+</body>
+</html>
