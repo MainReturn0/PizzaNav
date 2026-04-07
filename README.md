@@ -124,13 +124,6 @@ pizzanav/
     └── manager.html    ← Manager Dashboard
 ```
 
----
 
-## CV / Portfolio Title
-
-**"Smart Delivery Driver Portal with OCR-based Order Automation"**  
-*Node.js · Express · SQLite · PWA · Server-Sent Events · ESC/POS Print Interception*
-
----
 
 Built with 💙 for making delivery shifts smoother.
